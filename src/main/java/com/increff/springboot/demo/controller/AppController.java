@@ -12,9 +12,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(value = "/admin/api")
-public class AdminController {
-
+@RequestMapping(value = "/app/api")
+public class AppController {
     @Autowired
     private UserApi api;
 
@@ -27,6 +26,6 @@ public class AdminController {
     @Operation(summary = "Health api", description = "Wow we can also write detailed description")
     @RequestMapping(value = "/health", method = RequestMethod.GET)
     public String smoke(){
-        return "Admin hoon bhai";
+        return "Admin nehi hoon vai";
     }
 }
