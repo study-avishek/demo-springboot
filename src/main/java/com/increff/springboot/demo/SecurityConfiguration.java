@@ -1,5 +1,6 @@
 package com.increff.springboot.demo;
 
+import com.increff.account.client.AuthClient;
 import com.increff.account.client.AuthTokenFilter;
 import com.increff.account.client.CredentialFilter;
 import lombok.RequiredArgsConstructor;
@@ -7,12 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration
@@ -21,22 +21,26 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 @Order(-1)
 public class SecurityConfiguration {
     @Autowired
-    private AuthTokenFilter authTokenFilter;
-
-    @Autowired CredentialFilter credentialFilter;
+    private AuthClient authClient;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/demo/**", "/swagger-ui/**", "/public/**", "/v3/api-docs/**", "/session/**", "/actuator/**", "/admin/**", "/app/**")
-                .authorizeHttpRequests((authz) -> authz.requestMatchers("/demo/**", "/swagger-ui/**", "/public/**", "/v3/api-docs/**", "/session/**", "/actuator/**").permitAll()
-                .requestMatchers("/admin/**").hasAnyAuthority("admin", "app.admin")
-                .requestMatchers("/app/**").hasAnyAuthority("admin", "app.admin","app.standard")
+                .securityMatcher("/admin/**", "/app/**")
+                .authorizeHttpRequests((authz) -> authz
+                        .requestMatchers("/admin/**").hasAnyAuthority("admin", "app.admin")
+                        .requestMatchers("/app/**").hasAnyAuthority("admin", "app.admin","app.standard")
                         .anyRequest().authenticated())//
                 .cors(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
-                .addFilterAfter(authTokenFilter, BasicAuthenticationFilter.class);
+                .addFilterAfter(new CredentialFilter(authClient), BasicAuthenticationFilter.class)
+                .addFilterBefore(new AuthTokenFilter(authClient), CredentialFilter.class);
         return http.build();
+    }
+
+    @Bean
+    public WebSecurityCustomizer ignoringCustomizer() {
+        return (web) -> web.ignoring().requestMatchers("/public/**", "/swagger-ui/**", "/public/**", "/v3/api-docs/**", "/session/**", "/actuator/**");
     }
 }
 

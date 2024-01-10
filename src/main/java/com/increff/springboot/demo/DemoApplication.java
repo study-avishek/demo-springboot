@@ -25,6 +25,6 @@ public class DemoApplication {
 
 	@Bean
 	public AuthClient authClient() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-		return new AuthClient(properties.getBaseUrl(), properties.getAuthAppToken(), new RestTemplateBuilder().build());
+		return new AuthClient(properties.getBaseUrl(), properties.getAuthAppToken());
 	}
 }
